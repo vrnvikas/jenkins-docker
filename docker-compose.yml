@@ -1,0 +1,49 @@
+version: "3.7"
+# https://docs.docker.com/compose/yml/
+# Each service defined in docker-compose.yml must specify exactly one of
+# image or build. Other keys are optional, and are analogous to their
+# docker run command-line counterparts.
+#
+# As with docker run, options specified in the Dockerfile (e.g., CMD,
+# EXPOSE, VOLUME, ENV) are respected by default - you don't need to
+# specify them again in docker-compose.yml.
+#
+services:
+  jenkins-lts:
+#     build:
+#       context: .
+    image: docker-custom:latest
+    container_name: jenkins
+    user: root
+#    env_file: .env
+    # Not Nedded As we are uing Nginx
+    ports:
+     - "8080:8080"
+     - "5000:5000"
+     - "9080:9080"
+    deploy:
+      resources:
+          limits:
+            cpus: '1.50'
+            memory: 2000M
+          reservations:
+            cpus: '1'
+            memory: 1500M
+    volumes:
+#     - ./jenkins_home:/var/jenkins_home
+     - "/var/run/docker.sock:/var/run/docker.sock:rw"
+#     - "/usr/bin/docker:/usr/bin/docker"
+     - "./init_scripts_jenkins:/usr/share/jenkins/ref/init.groovy.d/"
+
+  nginx:
+    image: nginx:alpine
+    container_name: production_nginx01
+    restart: always
+    volumes:
+      - ./nginx_config/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - 80:80
+      - 443:443
+    deploy:
+      restart_policy:
+        condition: on-failure
